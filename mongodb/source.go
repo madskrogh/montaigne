@@ -8,13 +8,12 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
-//When creating mongodb, use schema validation to ensure only good data is accepted
-//https://docs.mongodb.com/manual/core/schema-validation/
-
+//SourceService is an implementation of the montaigne.SourceService interface
 type SourceService struct {
 	MongoDB *mgo.Session
 }
 
+//Source returns the source that matches the given title
 func (ss *SourceService) Source(title string) (*montaigne.Source, error) {
 	source := montaigne.Source{}
 	if err := ss.MongoDB.DB("montaigne").C("sources").Find(bson.M{"title": title}).One(&source); err != nil {
@@ -24,6 +23,7 @@ func (ss *SourceService) Source(title string) (*montaigne.Source, error) {
 	return &source, nil
 }
 
+//Sources return all sources
 func (ss *SourceService) Sources() (*[]montaigne.Source, error) {
 	sources := make([]montaigne.Source, 0)
 	if err := ss.MongoDB.DB("montaigne").C("sources").Find(bson.M{}).All(&sources); err != nil {
@@ -33,6 +33,7 @@ func (ss *SourceService) Sources() (*[]montaigne.Source, error) {
 	return &sources, nil
 }
 
+//Titles projects all source titles
 func (ss *SourceService) Titles() (*[]string, error) {
 	sources := []montaigne.Source{}
 	if err := ss.MongoDB.DB("montaigne").C("sources").Find(bson.M{}).Select(bson.M{"_id": 0, "title": 1}).All(&sources); err != nil {
@@ -46,11 +47,13 @@ func (ss *SourceService) Titles() (*[]string, error) {
 	return &titles, nil
 }
 
+//Create inserts a new source into the collection
 func (ss *SourceService) Create(source *montaigne.Source) error {
 	err := ss.MongoDB.DB("montaigne").C("sources").Insert(&source)
 	return err
 }
 
+//Delete removes the first source that matches on title
 func (ss *SourceService) Delete(title string) error {
 	err := ss.MongoDB.DB("montaigne").C("sources").Remove(bson.M{"title": title})
 	return err
